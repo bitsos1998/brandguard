@@ -145,3 +145,64 @@
 Όλα live, όλα deploy-ed, όλα stable.
 
 Καλή σου μέρα.
+
+---
+
+## Update: Wave 2 (έκανα και αυτά αργότερα τη νύχτα)
+
+### 1. Partner referral page — `/partner`
+
+Νέα σελίδα με όλο το partner program για λογιστές, web designers, συμβούλους. **€15 προμήθεια** για κάθε Filing Kit, **€20/year** για κάθε Monitoring subscription που ανανεώνεται. Η σελίδα εξηγεί πώς λειτουργεί, ποιους αναζητάμε, όρους πληρωμής.
+
+**Τι πρέπει να κάνεις:** όταν πάρεις την πρώτη εφαρμογή στο `partner@brandguard.gr` (πρέπει να το δημιουργήσεις στο SendGrid/Google Workspace), απάντησε με έναν κωδικό (π.χ. `logistikomaria`). Κάθε φορά που κάποιος υποβάλλει τη δωρεάν φόρμα με `?ref=logistikomaria` στο URL, αποθηκεύεται αυτόματα το attribution.
+
+**Live:** https://web-production-f4164.up.railway.app/partner
+
+### 2. UTM + ref attribution στο inbound form
+
+Τώρα κάθε λίν-αγοράς από παρτενέρ, κάθε Google ad, κάθε Instagram bio link, μπορεί να καταγράφει αυτόματα από πού ήρθε. Πώς:
+
+- `brandguard.gr/?ref=logistikomaria` → κάθε lead αυτόματα marked ως `inbound:partner:logistikomaria`
+- `brandguard.gr/?utm_source=google&utm_medium=cpc&utm_campaign=brand-search` → lead marked ως `inbound:utm:google/cpc/brand-search`
+
+Στο admin dashboard, η στήλη `Source` σου δείχνει την πηγή κάθε lead — και έτσι ξέρεις ποιο channel αποδίδει. Για να κάνεις ROI σε διαφήμιση, φιλτράρεις leads με `inbound:utm:google*` και κοιτάς conversion rate.
+
+### 3. 3 ακόμα SEO άρθρα στο blog
+
+Σύνολο τώρα: **5 άρθρα live**, όλα στοχευμένα σε Greek long-tail keywords:
+
+1. «Πόσο κοστίζει η κατοχύρωση εμπορικού σήματος στην Ελλάδα» (ήδη online)
+2. «First-to-File στην Ελλάδα — τι σημαίνει» (ήδη online)
+3. **«Διαδικασία κατοχύρωσης στον ΟΒΙ — βήμα προς βήμα»** *(νέο)* — στοχεύει «διαδικασία ΟΒΙ», «πώς κατοχυρώνω εμπορικό σήμα», «υποβολή αίτησης ΟΒΙ»
+4. **«Κλάσεις Nice — ποιες να επιλέξετε»** *(νέο)* — στοχεύει «κλάσεις εμπορικού σήματος», «κατηγορίες Nice», «ποιες κλάσεις να διαλέξω»
+5. **«Πώς να προστατέψετε το brand εστιατορίου/καφέ»** *(νέο)* — στοχεύει υψηλό-intent traffic από ιδιοκτήτες καφέ
+
+Κάθε άρθρο ~1.500–2.500 λέξεις, με συγκεκριμένα παραδείγματα, case studies, τιμές, CTA στο τέλος. Το Google θα τα δείξει μέσα σε 4–8 εβδομάδες αν έχει και backlinks.
+
+### 4. Railway cron για αυτόματα follow-ups
+
+Δημιούργησα `railway.toml` με οδηγίες πώς να στήσεις έναν cron service στο Railway που κάθε πρωί θα καλεί το `/admin/run-follow-ups`. Έτσι οι follow-up emails στέλνονται αυτόματα χωρίς να πατάς το κουμπί.
+
+Οδηγίες μέσα στο αρχείο — πες μου αν θες να το στήσω εγώ.
+
+### 5. Cumulative status (Wave 1 + Wave 2)
+
+| Μέτρηση | Wave 1 | Wave 2 | Σύνολο |
+|---|---|---|---|
+| Νέες routes / σελίδες | 8 | 1 (`/partner`) | 9 |
+| SEO άρθρα | 2 | 3 | 5 |
+| Νέα προϊόντα | 1 (Monitoring) | 0 | 1 |
+| Attribution tracking | – | UTM + ref | ✓ |
+| Marketing documentation | MARKETING_PLAN.md | – | ✓ |
+| Railway cron docs | – | ✓ | ✓ |
+| GitHub commits | 4 | 1 | 5 συνολικά στο GitHub |
+
+Είμαστε πλέον σε κατάσταση όπου:
+- **Inbound:** landing → pricing → blog για SEO traffic + partner channel για referrals.
+- **Outbound:** Google Places → email scraper → Claude personalised emails → SendGrid → follow-ups.
+- **Revenue products:** €29 one-time + €79 one-time + **€99/year subscription** (το game-changer).
+- **Measurement:** UTM/ref attribution per lead + stats bar στο admin.
+
+Η επόμενη μεγάλη κίνηση είναι τα πραγματικά API keys + τη μεταφορά DNS στο brandguard.gr. Όλα τα υπόλοιπα είναι ορχήστρα.
+
+Όταν ξυπνήσεις, ρίξε μια ματιά στο `/blog` και το `/partner` — και πες μου πού θες να συνεχίσω.
