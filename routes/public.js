@@ -14,17 +14,27 @@ router.get('/', (req, res) => {
 // Handle inbound lead form submission
 router.post('/submit-lead', async (req, res) => {
   try {
-    const { business_name, contact_name, contact_email, sector, city } = req.body;
+    const { business_name, contact_name, contact_email, sector, city,
+            utm_source, utm_medium, utm_campaign, ref } = req.body;
 
     if (!business_name || !contact_email) {
       return res.status(400).send('Απαιτούνται το όνομα επιχείρησης και το email.');
     }
 
+    // Build a compact source string for tracking:
+    // "inbound" | "inbound:partner:maria" | "inbound:utm:google/cpc/brand-search"
+    let sourceString = 'inbound';
+    if (ref) {
+      sourceString = `inbound:partner:${String(ref).slice(0, 40)}`;
+    } else if (utm_source) {
+      sourceString = `inbound:utm:${utm_source}${utm_medium ? '/' + utm_medium : ''}${utm_campaign ? '/' + utm_campaign : ''}`.slice(0, 120);
+    }
+
     const result = await pool.query(
       `INSERT INTO leads (business_name, contact_name, contact_email, sector, city, source, trademark_status, outreach_status)
-       VALUES ($1, $2, $3, $4, $5, 'inbound', 'unknown', 'pending')
+       VALUES ($1, $2, $3, $4, $5, $6, 'unknown', 'pending')
        RETURNING id`,
-      [business_name, contact_name, contact_email, sector, city]
+      [business_name, contact_name, contact_email, sector, city, sourceString]
     );
 
     const leadId = result.rows[0].id;
@@ -57,6 +67,7 @@ router.get('/faq', (req, res) => res.send(staticPageHTML('faq')));
 router.get('/privacy', (req, res) => res.send(staticPageHTML('privacy')));
 router.get('/terms', (req, res) => res.send(staticPageHTML('terms')));
 router.get('/about', (req, res) => res.send(staticPageHTML('about')));
+router.get('/partner', (req, res) => res.send(staticPageHTML('partner')));
 
 // Blog
 router.get('/blog', (req, res) => res.send(blogIndexHTML()));

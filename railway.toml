@@ -1,0 +1,22 @@
+# Railway configuration
+#
+# TO SET UP SCHEDULED FOLLOW-UPS (for Andreas):
+# 1. In Railway, create a new service of type "cron" in the same project.
+# 2. Use image:  curlimages/curl:latest
+# 3. Cron schedule: "0 10 * * *"  (daily at 10am UTC)
+# 4. Command:
+#      curl -X POST \
+#        -H "Cookie: admin_session=$ADMIN_PASSWORD" \
+#        https://web-production-f4164.up.railway.app/admin/run-follow-ups
+# 5. Add env var ADMIN_PASSWORD referencing the web service's password
+#
+# This sends Day-4 and Day-10 follow-up emails automatically every morning,
+# and auto-closes leads older than 30 days as "dead".
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node server.js"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

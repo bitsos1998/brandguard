@@ -172,6 +172,10 @@ function landingPageHTML() {
     <h3>Δωρεάν έλεγχος κινδύνου</h3>
     <p class="ptag">Ελέγχουμε OBI + EUIPO και σας στέλνουμε έκθεση εντός 48 ωρών. Χωρίς δέσμευση.</p>
     <form method="POST" action="/submit-lead">
+      <input type="hidden" name="utm_source" id="utm_source">
+      <input type="hidden" name="utm_medium" id="utm_medium">
+      <input type="hidden" name="utm_campaign" id="utm_campaign">
+      <input type="hidden" name="ref" id="ref">
       <label>Όνομα επιχείρησης *</label>
       <input type="text" name="business_name" required placeholder="π.χ. Καφέ Αρτέμιδα">
       <label>Το όνομά σας *</label>
@@ -366,10 +370,23 @@ function landingPageHTML() {
       <a href="/terms">Όροι Χρήσης</a>
       <a href="/how-it-works">Πώς λειτουργεί</a>
       <a href="/pricing">Τιμές</a>
+      <a href="/partner">Partners</a>
       <a href="mailto:hello@brandguard.gr">Επικοινωνία</a>
     </div>
   </div>
 </footer>
+
+<script>
+  (function(){
+    // Capture UTM / ref params from URL into the hidden form fields for attribution tracking.
+    var qs = new URLSearchParams(window.location.search);
+    ['utm_source','utm_medium','utm_campaign','ref'].forEach(function(k){
+      var el = document.getElementById(k);
+      var v = qs.get(k);
+      if (el && v) el.value = v;
+    });
+  })();
+</script>
 
 </body>
 </html>`;
