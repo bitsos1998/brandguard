@@ -4,6 +4,7 @@ const pool = require('../db');
 const { sendInboundConfirmation, sendAdminNotification } = require('../email');
 const { landingPageHTML, thankYouHTML, paymentPageHTML } = require('../views/landing');
 const { staticPageHTML } = require('../views/static-pages');
+const { blogIndexHTML, blogPostHTML, getAllPosts } = require('../views/blog');
 
 // Landing page
 router.get('/', (req, res) => {
@@ -56,6 +57,14 @@ router.get('/faq', (req, res) => res.send(staticPageHTML('faq')));
 router.get('/privacy', (req, res) => res.send(staticPageHTML('privacy')));
 router.get('/terms', (req, res) => res.send(staticPageHTML('terms')));
 router.get('/about', (req, res) => res.send(staticPageHTML('about')));
+
+// Blog
+router.get('/blog', (req, res) => res.send(blogIndexHTML()));
+router.get('/blog/:slug', (req, res) => {
+  const html = blogPostHTML(req.params.slug);
+  if (!html) return res.status(404).send('Post not found');
+  res.send(html);
+});
 
 // GDPR unsubscribe
 router.get('/unsubscribe', async (req, res) => {
@@ -110,11 +119,15 @@ Sitemap: https://brandguard.gr/sitemap.xml`);
 
 router.get('/sitemap.xml', (req, res) => {
   res.type('application/xml');
+  const posts = getAllPosts();
+  const postUrls = posts.map(p => `  <url><loc>https://brandguard.gr/blog/${p.slug}</loc><priority>0.8</priority><lastmod>${p.date}</lastmod></url>`).join('\n');
   res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://brandguard.gr/</loc><priority>1.0</priority></url>
   <url><loc>https://brandguard.gr/pricing</loc><priority>0.9</priority></url>
   <url><loc>https://brandguard.gr/how-it-works</loc><priority>0.8</priority></url>
+  <url><loc>https://brandguard.gr/blog</loc><priority>0.8</priority></url>
+${postUrls}
   <url><loc>https://brandguard.gr/faq</loc><priority>0.7</priority></url>
   <url><loc>https://brandguard.gr/about</loc><priority>0.6</priority></url>
   <url><loc>https://brandguard.gr/privacy</loc><priority>0.3</priority></url>

@@ -47,6 +47,7 @@ const NAV = `
     <div class="nav-links">
       <a href="/how-it-works">Πώς λειτουργεί</a>
       <a href="/pricing">Τιμές</a>
+      <a href="/blog">Blog</a>
       <a href="/faq">FAQ</a>
     </div>
     <a href="/#check" class="nav-cta">Δωρεάν έλεγχος →</a>

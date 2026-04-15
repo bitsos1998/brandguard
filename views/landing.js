@@ -148,7 +148,8 @@ function landingPageHTML() {
     <div class="nav-links">
       <a href="#how">Πώς λειτουργεί</a>
       <a href="#pricing">Τιμές</a>
-      <a href="#faq">Συχνές ερωτήσεις</a>
+      <a href="/blog">Blog</a>
+      <a href="#faq">FAQ</a>
     </div>
     <a href="#check" class="nav-cta">Δωρεάν έλεγχος →</a>
   </div>
