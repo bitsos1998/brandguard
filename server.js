@@ -84,6 +84,23 @@ async function initDB() {
       )
     `);
 
+    // GDPR / bounce suppression list — emails here will never receive outreach again
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS suppression_list (
+        email TEXT PRIMARY KEY,
+        reason TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Add follow-up tracking columns to leads if missing
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS follow_up_count INTEGER DEFAULT 0`);
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS last_follow_up_at TIMESTAMP`);
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT`);
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS address TEXT`);
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS google_maps_url TEXT`);
+    await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS data_source TEXT`); // 'places' | 'claude' | 'inbound' | 'manual'
+
     console.log('Database tables initialised successfully');
   } catch (err) {
     console.error('Error initialising database tables:', err.message);

@@ -56,6 +56,45 @@ router.get('/payment', (req, res) => {
   res.send(paymentPageHTML(product, leadId));
 });
 
+// GDPR unsubscribe — accepts ?email=&token= from outreach footer
+router.get('/unsubscribe', async (req, res) => {
+  const { email, token } = req.query;
+  if (!email || !token) {
+    return res.status(400).send(unsubscribePageHTML('Λείπουν παράμετροι.', false));
+  }
+
+  const { verifyUnsubscribeToken } = require('../lib/outreach');
+  if (!verifyUnsubscribeToken(email, token)) {
+    return res.status(400).send(unsubscribePageHTML('Μη έγκυρος σύνδεσμος.', false));
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO suppression_list (email, reason) VALUES ($1, 'unsubscribe')
+       ON CONFLICT (email) DO NOTHING`,
+      [String(email).toLowerCase()]
+    );
+    // Also mark any matching leads as dead
+    await pool.query(
+      `UPDATE leads SET outreach_status = 'dead', notes = COALESCE(notes, '') || ' [unsubscribed]' WHERE LOWER(contact_email) = LOWER($1)`,
+      [email]
+    );
+    console.log(`[unsubscribe] ${email} added to suppression list`);
+    res.send(unsubscribePageHTML('Αφαιρεθήκατε επιτυχώς από τη λίστα μας. Δεν θα λάβετε άλλα email από το BrandGuard.', true));
+  } catch (err) {
+    console.error('Unsubscribe error:', err.message);
+    res.status(500).send(unsubscribePageHTML('Παρουσιάστηκε σφάλμα.', false));
+  }
+});
+
+function unsubscribePageHTML(message, ok) {
+  return `<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8"><title>BrandGuard — Διαγραφή</title>
+<style>body{font-family:-apple-system,sans-serif;background:#f8f9fa;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:#fff;border-radius:12px;padding:40px;max-width:460px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.icon{font-size:40px;margin-bottom:16px}h2{color:#1a1a2e;margin-bottom:12px}p{color:#555;line-height:1.6}</style></head>
+<body><div class="card"><div class="icon">${ok ? '✅' : '⚠️'}</div><h2>${ok ? 'Επιτυχία' : 'Σφάλμα'}</h2><p>${message}</p><p style="margin-top:16px"><a href="/" style="color:#e94560">← Επιστροφή</a></p></div></body></html>`;
+}
+
 // Robots.txt
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain');

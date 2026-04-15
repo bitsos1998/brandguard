@@ -5,6 +5,9 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { sendOutreachMarkedSent } = require('../email');
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { searchPlaces } = require('../lib/placesApi');
+const { scrapeContactEmail } = require('../lib/emailScraper');
+const { sendOutreach, runFollowUpSequence } = require('../lib/outreach');
 
 // Admin login page
 router.get('/login', (req, res) => {
@@ -169,51 +172,74 @@ router.post('/research', async (req, res) => {
     const { sector, city, business_names } = req.body;
 
     let businesses = [];
+    let dataSource = 'unknown';
 
-    if (business_names && business_names.trim()) {
-      // Manual list provided — ask Claude to enrich it
-      const names = business_names.trim().split('\n').filter(n => n.trim());
-      const userPrompt = `Sector: ${sector}, City: ${city}. Business names to enrich: ${names.join(', ')}. For each business, provide the same JSON structure as if you generated them.`;
+    // Prefer real data from Google Places API
+    const placesResult = await searchPlaces(sector, city, 20);
 
-      const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        messages: [
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-        system: `You are a business research assistant for BrandGuard, a Greek trademark protection service. Given a sector and city in Greece, generate a realistic list of 20 Greek small businesses that would typically operate in that sector. For each business provide: business_name, city, sector, likely_website (educated guess), contact_email (educated guess based on business name), trademark_risk_reason (one sentence explaining why their specific name might be unprotected and valuable to protect), risk_level (high/medium/low based on how distinctive and valuable the name appears). Return as valid JSON array only, no other text. Risk level should be high if the name is distinctive and the business appears established, medium if the name is somewhat generic, low if the name is very generic or clearly descriptive.`,
-      });
+    if (placesResult.ok && placesResult.places.length > 0) {
+      // REAL businesses from Google Places — now scrape each website for real email
+      console.log(`[research] ${placesResult.places.length} real businesses from Places API`);
+      dataSource = 'places';
 
-      const content = message.content[0].text.trim();
-      businesses = JSON.parse(content);
+      for (const p of placesResult.places) {
+        let scrapedEmail = null;
+        let emailSource = null;
+        if (p.website) {
+          try {
+            const scrape = await scrapeContactEmail(p.website);
+            scrapedEmail = scrape.email;
+            emailSource = scrape.source;
+          } catch (err) {
+            console.error(`Scrape failed for ${p.website}:`, err.message);
+          }
+        }
+
+        businesses.push({
+          business_name: p.business_name,
+          city,
+          sector,
+          likely_website: p.website,
+          contact_email: scrapedEmail,
+          phone: p.phone,
+          address: p.address,
+          google_maps_url: p.google_maps_url,
+          email_source: emailSource,
+          trademark_risk_reason: '(needs trademark check)',
+          risk_level: scrapedEmail ? 'medium' : 'low', // default — refined after TMview check
+          data_source: 'places',
+        });
+      }
     } else {
-      // Generate list via Claude
+      // Fallback: Claude generates educated guesses (low quality, use only if Places unavailable)
+      console.log(`[research] Places unavailable (${placesResult.reason}) — using Claude fallback`);
+      dataSource = 'claude';
+
       const message = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         messages: [
           {
             role: 'user',
-            content: `Sector: ${sector}, City: ${city}. Generate 20 Greek businesses.`,
+            content: business_names && business_names.trim()
+              ? `Sector: ${sector}, City: ${city}. Business names to enrich: ${business_names.trim()}`
+              : `Sector: ${sector}, City: ${city}. Generate 20 Greek businesses.`,
           },
         ],
-        system: `You are a business research assistant for BrandGuard, a Greek trademark protection service. Given a sector and city in Greece, generate a realistic list of 20 Greek small businesses that would typically operate in that sector. For each business provide: business_name, city, sector, likely_website (educated guess), contact_email (educated guess based on business name), trademark_risk_reason (one sentence explaining why their specific name might be unprotected and valuable to protect), risk_level (high/medium/low based on how distinctive and valuable the name appears). Return as valid JSON array only, no other text. Risk level should be high if the name is distinctive and the business appears established, medium if the name is somewhat generic, low if the name is very generic or clearly descriptive.`,
+        system: `You are a business research assistant for BrandGuard, a Greek trademark protection service. Given a sector and city in Greece, generate a realistic list of 20 Greek small businesses that would typically operate in that sector. For each business provide: business_name, city, sector, likely_website (educated guess), contact_email (educated guess based on business name), trademark_risk_reason (one sentence explaining why their specific name might be unprotected and valuable to protect), risk_level (high/medium/low based on how distinctive and valuable the name appears). Return as valid JSON array only, no other text.`,
       });
 
-      const content = message.content[0].text.trim();
-      businesses = JSON.parse(content);
+      businesses = JSON.parse(message.content[0].text.trim());
+      for (const b of businesses) b.data_source = 'claude';
     }
 
     // Save batch record
     await pool.query(
       `INSERT INTO research_batches (sector, city, total_found, notes) VALUES ($1, $2, $3, $4)`,
-      [sector, city, businesses.length, `Claude-generated research batch`]
+      [sector, city, businesses.length, `${dataSource} research batch`]
     );
 
-    res.send(researchHTML('', businesses, sector, city));
+    res.send(researchHTML('', businesses, sector, city, dataSource));
   } catch (err) {
     console.error('Error running research:', err.message);
     res.status(500).send('Error running research: ' + err.message);
@@ -236,9 +262,11 @@ router.post('/research/add-leads', async (req, res) => {
     let added = 0;
     for (const b of businesses) {
       await pool.query(
-        `INSERT INTO leads (business_name, sector, city, website, contact_email, trademark_notes, risk_level, source, trademark_status, outreach_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'outreach', 'unknown', 'pending')`,
-        [b.business_name, b.sector, b.city, b.likely_website, b.contact_email, b.trademark_risk_reason, b.risk_level]
+        `INSERT INTO leads (business_name, sector, city, website, contact_email, phone, address, google_maps_url,
+                            trademark_notes, risk_level, source, trademark_status, outreach_status, data_source)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'outreach', 'unknown', 'pending', $11)`,
+        [b.business_name, b.sector, b.city, b.likely_website, b.contact_email, b.phone || null,
+         b.address || null, b.google_maps_url || null, b.trademark_risk_reason, b.risk_level, b.data_source || 'claude']
       );
       added++;
     }
@@ -423,6 +451,8 @@ function leadsHTML(leads, stats, currentFilter) {
   </div>
   <div class="toolbar">
     ${filterButtons}
+    <button onclick="sendBatch()" class="btn-export" style="background:#0d6efd;border:none;cursor:pointer;font-family:inherit">⚡ Send All Pending</button>
+    <button onclick="runFollowUps()" class="btn-export" style="background:#fd7e14;border:none;cursor:pointer;font-family:inherit">🔁 Follow-ups</button>
     <a href="/admin/leads/export" class="btn-export">Export CSV</a>
     <a href="/admin/research" class="btn-export" style="background:#198754">+ Research</a>
   </div>
@@ -530,15 +560,50 @@ async function markSent() {
     alert('Error: ' + e.message);
   }
 }
+
+async function sendBatch() {
+  if (!confirm('Send outreach emails to ALL pending leads with a contact email?\\n\\nEmails go out via SendGrid. Each includes a GDPR unsubscribe link. Max 200 at once.')) return;
+  try {
+    const res = await fetch('/admin/send-batch', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ limit: 200 })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    alert('Done. Sent: ' + data.sent + ', Failed: ' + data.failed + ' (of ' + data.total + ' pending)');
+    location.reload();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function runFollowUps() {
+  if (!confirm('Run follow-up sequence?\\n\\nSends Day-4 and Day-10 follow-ups to leads who haven\\'t replied. Auto-closes leads older than 30 days.')) return;
+  try {
+    const res = await fetch('/admin/run-follow-ups', { method: 'POST' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    alert('Done. Follow-ups sent: ' + data.sent + ', Auto-closed: ' + data.closed);
+    location.reload();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
 </script>
 </body>
 </html>`;
 }
 
-function researchHTML(error, businesses, sector, city) {
-  const resultsHTML = businesses.length > 0 ? `
+function researchHTML(error, businesses, sector, city, dataSource) {
+  const sourceBadge = dataSource === 'places'
+    ? '<span style="background:#d4edda;color:#155724;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;margin-left:12px">✓ REAL (Google Places)</span>'
+    : dataSource === 'claude'
+    ? '<span style="background:#f8d7da;color:#721c24;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;margin-left:12px">⚠ Claude-generated (set GOOGLE_PLACES_API_KEY)</span>'
+    : '';
+  const resultsHTML = (businesses && businesses.length > 0) ? `
     <div class="results">
-      <h3>Results: ${businesses.length} businesses found (${sector}, ${city})</h3>
+      <h3>Results: ${businesses.length} businesses found (${sector}, ${city})${sourceBadge}</h3>
       <form method="POST" action="/admin/research/add-leads">
         <table>
           <thead>
@@ -651,5 +716,119 @@ function esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// ─── BATCH OUTREACH: auto-generate + auto-send ─────────────────────────────────
+
+// POST /admin/send-outreach — takes a lead_id, generates email via Claude, sends via SendGrid
+router.post('/send-outreach', async (req, res) => {
+  try {
+    const { lead_id } = req.body;
+    const leadResult = await pool.query('SELECT * FROM leads WHERE id = $1', [lead_id]);
+    if (leadResult.rows.length === 0) return res.status(404).json({ error: 'Lead not found' });
+    const lead = leadResult.rows[0];
+
+    if (!lead.contact_email) {
+      return res.status(400).json({ error: 'No contact_email for this lead — cannot send.' });
+    }
+
+    // Generate personalised email
+    const msg = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: `You are writing outreach emails for BrandGuard, a Greek trademark protection service. The tone is helpful and informative, never threatening or alarming. Write in Greek. Be specific, warm, professional. Keep under 180 words. Return JSON: { "subject": "...", "body": "..." }.`,
+      messages: [{
+        role: 'user',
+        content: `Business: ${lead.business_name} (${lead.sector || ''} in ${lead.city || 'Greece'}). Reason name may be unprotected: ${lead.trademark_notes || 'no registered Greek trademark found'}. Include: acknowledge business, mention no registered trademark, explain Greek first-to-file rule, offer free risk check, call to action to reply or visit brandguard.gr. Sign off as BrandGuard team.`,
+      }],
+    });
+
+    const { subject, body } = JSON.parse(msg.content[0].text.trim());
+    const sendResult = await sendOutreach({
+      toEmail: lead.contact_email,
+      toName: lead.contact_name,
+      subject,
+      body,
+      leadId: lead.id,
+      isFollowUp: false,
+    });
+
+    res.json({ success: sendResult.sent, reason: sendResult.reason });
+  } catch (err) {
+    console.error('Error sending outreach:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /admin/send-batch — send outreach to ALL pending leads with a valid email
+router.post('/send-batch', async (req, res) => {
+  try {
+    const { limit = 50 } = req.body;
+    const result = await pool.query(`
+      SELECT * FROM leads
+      WHERE outreach_status = 'pending'
+        AND contact_email IS NOT NULL
+        AND contact_email <> ''
+      ORDER BY created_at DESC
+      LIMIT $1
+    `, [Math.min(Number(limit) || 50, 200)]);
+
+    let sent = 0, failed = 0;
+    for (const lead of result.rows) {
+      try {
+        const msg = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1024,
+          system: `You are writing outreach emails for BrandGuard, a Greek trademark protection service. Tone: helpful, informative, never threatening. Write in Greek. Under 180 words. Return JSON: { "subject": "...", "body": "..." }.`,
+          messages: [{
+            role: 'user',
+            content: `Business: ${lead.business_name} (${lead.sector || ''} in ${lead.city || 'Greece'}). Reason: ${lead.trademark_notes || 'no registered Greek trademark found'}. Acknowledge business, mention Greek first-to-file rule, offer free risk check, CTA to reply or visit brandguard.gr. Sign off as BrandGuard team.`,
+          }],
+        });
+        const { subject, body } = JSON.parse(msg.content[0].text.trim());
+        const r = await sendOutreach({
+          toEmail: lead.contact_email,
+          toName: lead.contact_name,
+          subject, body, leadId: lead.id, isFollowUp: false,
+        });
+        if (r.sent) sent++; else failed++;
+      } catch (err) {
+        console.error(`Batch send failed for lead ${lead.id}:`, err.message);
+        failed++;
+      }
+    }
+
+    res.json({ success: true, sent, failed, total: result.rows.length });
+  } catch (err) {
+    console.error('Error in batch send:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /admin/run-follow-ups — runs Day 4 / Day 10 follow-up sequence + auto-closes old leads
+// Can be hit manually from dashboard or called by a scheduled cron job
+router.post('/run-follow-ups', async (req, res) => {
+  try {
+    const result = await runFollowUpSequence(async (lead) => {
+      // Generate follow-up email via Claude
+      const count = lead.follow_up_count || 0;
+      const tone = count === 0 ? 'a gentle first follow-up' : 'a final short nudge';
+      const msg = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 512,
+        system: `You are writing a follow-up email for BrandGuard. Tone: warm, brief, Greek. Under 80 words. Return JSON: { "subject": "...", "body": "..." }.`,
+        messages: [{
+          role: 'user',
+          content: `Write ${tone} to ${lead.business_name} (${lead.sector}, ${lead.city}). Reference the previous email about trademark risk. Offer one more chance to get the free check. Sign off BrandGuard team.`,
+        }],
+      });
+      return JSON.parse(msg.content[0].text.trim());
+    });
+
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('Error running follow-ups:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
