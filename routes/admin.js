@@ -707,6 +707,60 @@ function researchHTML(error, businesses, sector, city, dataSource) {
 </html>`;
 }
 
+// ─── OUTREACH PROMPT BUILDERS ──────────────────────────────────────────────────
+
+// Sector-specific opening hooks — research-backed angle that makes each sector feel personally addressed.
+const SECTOR_HOOKS = {
+  'εστιατόριο/καφέ': 'Οι εστιάτορες και οι ιδιοκτήτες καφέ που επεκτείνουν σε δεύτερο κατάστημα ή χτίζουν brand για delivery apps είναι οι πιο συχνοί στόχοι trademark squatters στην Ελλάδα.',
+  'λιανικό': 'Επιχειρήσεις λιανικής με ξεχωριστό brand name κινδυνεύουν ιδιαίτερα όταν επεκτείνουν σε e-commerce ή ανοίγουν δεύτερη τοποθεσία.',
+  'logistics': 'Οι εταιρείες logistics που δραστηριοποιούνται B2B συχνά παραβλέπουν την κατοχύρωση του εμπορικού τους σήματος ακόμα και μετά από χρόνια στην αγορά.',
+  'ομορφιά': 'Τα brands ομορφιάς με ξεχωριστό όνομα ή δική τους σειρά προϊόντων είναι από τα πιο ευάλωτα σε trademark disputes, ειδικά αν ξεκινούν πωλήσεις online.',
+  'τρόφιμα': 'Οι παραγωγοί τροφίμων που θέλουν να εξάγουν ή να μπουν σε μεγάλες αλυσίδες χρειάζονται απαραίτητα κατοχυρωμένο σήμα πριν προχωρήσουν.',
+  'υπηρεσίες': 'Επαγγελματικές υπηρεσίες που χτίζουν brand recognition συχνά ανακαλύπτουν πολύ αργά ότι κάποιος ανταγωνιστής έχει ήδη καταχωρήσει παρόμοιο όνομα.',
+  'e-commerce': 'Στα e-commerce brands το όνομα είναι το πιο πολύτιμο asset — και ταυτόχρονα το πιο εύκολο να χαθεί αν δεν είναι κατοχυρωμένο.',
+};
+
+function buildOutreachSystemPrompt() {
+  return `You are writing cold outreach emails for BrandGuard — a Greek trademark protection service.
+
+TONE: Helpful, informative, warm. Never alarmist, never threatening, never "legal scare tactics". You're alerting a business owner to a genuine risk they probably don't know about, in the same way a friendly colleague would. Respect their intelligence.
+
+LANGUAGE: Greek only. Use natural, modern business Greek — not bureaucratic or overly formal.
+
+STRUCTURE (mandatory):
+1. Personalised subject line referencing their business name.
+2. Opening line that acknowledges their specific business AND city/sector (no generic greetings).
+3. The core insight: in Greece trademark rights go to whoever files first at OBI — not whoever uses the name. So they might be operating unprotected right now.
+4. A concrete micro-risk relevant to their sector (use the hook provided).
+5. The offer: a free 48-hour trademark risk check, no obligation, no credit card.
+6. Clear single CTA: reply to this email OR visit brandguard.gr.
+7. Sign off: "Με εκτίμηση, / Η ομάδα BrandGuard / brandguard.gr".
+
+LENGTH: Under 160 words in the body. Subject line under 65 characters.
+
+NEVER:
+- Claim you've already found a specific conflict (you haven't — that would be misleading).
+- Use fear-based language like "κίνδυνος", "απειλή" in the subject line (too spammy).
+- Include prices (this email is about getting them to the free check first).
+- Use "Dear Sir/Madam" or overly formal openings.
+
+OUTPUT: Return ONLY valid JSON: { "subject": "...", "body": "..." }. No markdown, no preamble.`;
+}
+
+function buildOutreachUserPrompt(lead) {
+  const sectorHook = SECTOR_HOOKS[lead.sector] || 'Επιχειρήσεις με ξεχωριστό brand name κινδυνεύουν περισσότερο από όσο περιμένουν.';
+  return `Write an outreach email to:
+
+Business name: ${lead.business_name}
+Sector: ${lead.sector || 'unspecified'}
+City: ${lead.city || 'Greece'}
+Trademark notes: ${lead.trademark_notes || 'no registered Greek trademark detected in preliminary search'}
+
+Sector-specific hook to weave in naturally: "${sectorHook}"
+
+Make the email feel written specifically for ${lead.business_name} — not a template. Use the sector hook as a specific risk angle, not a generic one.`;
+}
+
 function esc(str) {
   if (!str) return '';
   return String(str)
@@ -731,14 +785,14 @@ router.post('/send-outreach', async (req, res) => {
       return res.status(400).json({ error: 'No contact_email for this lead — cannot send.' });
     }
 
-    // Generate personalised email
+    // Generate personalised email (sector-aware)
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
-      system: `You are writing outreach emails for BrandGuard, a Greek trademark protection service. The tone is helpful and informative, never threatening or alarming. Write in Greek. Be specific, warm, professional. Keep under 180 words. Return JSON: { "subject": "...", "body": "..." }.`,
+      system: buildOutreachSystemPrompt(),
       messages: [{
         role: 'user',
-        content: `Business: ${lead.business_name} (${lead.sector || ''} in ${lead.city || 'Greece'}). Reason name may be unprotected: ${lead.trademark_notes || 'no registered Greek trademark found'}. Include: acknowledge business, mention no registered trademark, explain Greek first-to-file rule, offer free risk check, call to action to reply or visit brandguard.gr. Sign off as BrandGuard team.`,
+        content: buildOutreachUserPrompt(lead),
       }],
     });
 
@@ -778,10 +832,10 @@ router.post('/send-batch', async (req, res) => {
         const msg = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1024,
-          system: `You are writing outreach emails for BrandGuard, a Greek trademark protection service. Tone: helpful, informative, never threatening. Write in Greek. Under 180 words. Return JSON: { "subject": "...", "body": "..." }.`,
+          system: buildOutreachSystemPrompt(),
           messages: [{
             role: 'user',
-            content: `Business: ${lead.business_name} (${lead.sector || ''} in ${lead.city || 'Greece'}). Reason: ${lead.trademark_notes || 'no registered Greek trademark found'}. Acknowledge business, mention Greek first-to-file rule, offer free risk check, CTA to reply or visit brandguard.gr. Sign off as BrandGuard team.`,
+            content: buildOutreachUserPrompt(lead),
           }],
         });
         const { subject, body } = JSON.parse(msg.content[0].text.trim());

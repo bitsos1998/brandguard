@@ -11,12 +11,22 @@ const PRODUCTS = {
     amount: 2900, // cents
     currency: 'eur',
     display: '€29',
+    mode: 'payment', // one-time
   },
   kit: {
     name: 'BrandGuard Filing Kit',
     amount: 7900,
     currency: 'eur',
     display: '€79',
+    mode: 'payment', // one-time
+  },
+  monitoring: {
+    name: 'BrandGuard Monitoring (yearly)',
+    amount: 9900,
+    currency: 'eur',
+    display: '€99/year',
+    mode: 'subscription', // recurring annual
+    interval: 'year',
   },
 };
 
@@ -32,19 +42,29 @@ router.get('/create-checkout', async (req, res) => {
 
     const baseUrl = process.env.BASE_URL || `https://${req.hostname}`;
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
+    const lineItem = productConfig.mode === 'subscription'
+      ? {
+          price_data: {
+            currency: productConfig.currency,
+            product_data: { name: productConfig.name },
+            unit_amount: productConfig.amount,
+            recurring: { interval: productConfig.interval || 'year' },
+          },
+          quantity: 1,
+        }
+      : {
           price_data: {
             currency: productConfig.currency,
             product_data: { name: productConfig.name },
             unit_amount: productConfig.amount,
           },
           quantity: 1,
-        },
-      ],
-      mode: 'payment',
+        };
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [lineItem],
+      mode: productConfig.mode || 'payment',
       success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&lead_id=${lead_id || ''}`,
       cancel_url: `${baseUrl}/payment?product=${product}&lead_id=${lead_id || ''}`,
       metadata: {
