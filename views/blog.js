@@ -83,7 +83,7 @@ const NAV = `
       <a href="/blog">Blog</a>
       <a href="/faq">FAQ</a>
     </div>
-    <a href="/#check" class="nav-cta">Δωρεάν έλεγχος →</a>
+    <a href="/#check" class="nav-cta">Έλεγχος €9 →</a>
   </div>
 </nav>`;
 
@@ -158,9 +158,9 @@ ${NAV}
   <p class="article-lead">${post.description}</p>
   ${post.bodyHTML}
   <div class="cta-box">
-    <h3>Ελέγξτε το δικό σας brand — δωρεάν</h3>
+    <h3>Ελέγξτε το δικό σας brand — μόνο €9</h3>
     <p>Εντός 48 ωρών θα ξέρετε αν το όνομα της επιχείρησής σας είναι νομικά προστατευμένο στην Ελλάδα.</p>
-    <a href="/#check">Ξεκινήστε τον δωρεάν έλεγχο →</a>
+    <a href="/#check">Ξεκινήστε τον έλεγχο — €9 →</a>
   </div>
 </article>
 ${FOOTER}

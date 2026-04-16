@@ -1,7 +1,7 @@
 # BrandGuard — Marketing & Growth Plan
 
 **Product:** BrandGuard — a Greek trademark protection tool for SMBs.
-**Revenue model:** €29 Risk Report (one-time) · €79 Filing Kit (one-time) · **€99/year Monitoring (subscription — newly added)**.
+**Revenue model:** €9 Trademark Check (one-time) · €29 Risk Report (one-time) · €59 Filing Kit (one-time) · **€99/year Monitoring (subscription)**.
 **Core insight:** 70%+ of Greek SMBs operate an unprotected brand name. They don't know. The first-to-file OBI rule means any competitor or squatter can register it tomorrow. This is a real, under-served pain.
 
 ---
@@ -54,7 +54,7 @@ Rank by willingness-to-pay × pain density:
 
 | Metric | Value | Notes |
 |---|---|---|
-| **Gross ACV mix assumption** | 60% Filing Kit × €79 + 25% Risk Report × €29 + 15% Monitoring × €99/yr | Year 1 mix |
+| **Gross ACV mix assumption** | 60% Filing Kit × €59 + 25% Risk Report × €29 + 15% Monitoring × €99/yr | Year 1 mix |
 | **Blended ARPA (Year 1)** | ≈ €69 | Weighted avg |
 | **Cost to serve** | €4–6/lead | Claude API + Places + SendGrid |
 | **Gross margin** | ~90% | Digital product |
@@ -161,7 +161,7 @@ Rank by willingness-to-pay × pain density:
 
 1. **Greek-specific data pipeline.** EUIPO + OBI + ΓΕΜΗ integrations that no US/EU competitor bothers to build.
 2. **Sector-tuned outreach templates.** Every cold email is personalised via the hook system in `lib/outreach.js`. Competitors send generic "protect your brand" emails.
-3. **Price transparency.** €29 / €79 / €99. Full stop. Competitors (IP law firms) start at €500.
+3. **Price transparency.** €9 / €29 / €59 / €99. Full stop. Competitors (IP law firms) start at €500.
 4. **48h SLA.** Nobody else in the Greek market commits to a time-bound response.
 5. **Subscription product.** Monitoring locks in customers annually — most competitors are one-shot lawyers.
 

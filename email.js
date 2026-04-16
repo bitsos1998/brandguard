@@ -11,9 +11,9 @@ async function sendInboundConfirmation(toEmail, contactName, businessName) {
     to: toEmail,
     from: SENDER,
     subject: 'Λάβαμε το αίτημά σας — BrandGuard',
-    text: `Γεια σας ${contactName || ''},\n\nΕυχαριστούμε για το αίτημά σας για τον δωρεάν έλεγχο εμπορικού σήματος για "${businessName}".\n\nΘα επικοινωνήσουμε μαζί σας εντός 2 εργάσιμων ημερών με τα αποτελέσματα.\n\nΜε εκτίμηση,\nΗ ομάδα BrandGuard\nbrandguard.gr`,
+    text: `Γεια σας ${contactName || ''},\n\nΕυχαριστούμε για το αίτημά σας ελέγχου εμπορικού σήματος για "${businessName}".\n\nΘα επικοινωνήσουμε μαζί σας εντός 2 εργάσιμων ημερών με τα αποτελέσματα.\n\nΜε εκτίμηση,\nΗ ομάδα BrandGuard\nbrandguard.gr`,
     html: `<p>Γεια σας <strong>${contactName || ''}</strong>,</p>
-<p>Ευχαριστούμε για το αίτημά σας για τον δωρεάν έλεγχο εμπορικού σήματος για <strong>"${businessName}"</strong>.</p>
+<p>Ευχαριστούμε για το αίτημά σας ελέγχου εμπορικού σήματος για <strong>"${businessName}"</strong>.</p>
 <p>Θα επικοινωνήσουμε μαζί σας εντός <strong>2 εργάσιμων ημερών</strong> με τα αποτελέσματα.</p>
 <p>Με εκτίμηση,<br><strong>Η ομάδα BrandGuard</strong><br><a href="https://brandguard.gr">brandguard.gr</a></p>`,
   };

@@ -40,13 +40,12 @@ router.post('/submit-lead', async (req, res) => {
     const leadId = result.rows[0].id;
     console.log(`New inbound lead created: id=${leadId}, business=${business_name}`);
 
-    try { await sendInboundConfirmation(contact_email, contact_name, business_name); }
-    catch (emailErr) { console.error('Failed to send confirmation email:', emailErr.message); }
-
+    // Send admin notification (confirmation email sent after payment)
     try { await sendAdminNotification({ business_name, contact_name, contact_email, sector, city, leadId }); }
     catch (emailErr) { console.error('Failed to send admin notification:', emailErr.message); }
 
-    res.send(thankYouHTML(business_name));
+    // Redirect to Stripe checkout for the €9 trademark check
+    res.redirect(`/create-checkout?product=check&lead_id=${leadId}`);
   } catch (err) {
     console.error('Error saving inbound lead:', err.message);
     res.status(500).send('Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά.');

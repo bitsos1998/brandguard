@@ -8,10 +8,10 @@ function landingPageHTML() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BrandGuard — Προστατέψτε το brand σας στην Ελλάδα</title>
-  <meta name="description" content="Ελέγξτε δωρεάν αν το εμπορικό σας σήμα είναι καταχωρημένο στην Ελλάδα. Χιλιάδες επιχειρήσεις λειτουργούν απροστάτευτες — μη είστε μία από αυτές.">
+  <meta name="description" content="Ελέγξτε αν το εμπορικό σας σήμα είναι καταχωρημένο στην Ελλάδα — μόνο €9. Χιλιάδες επιχειρήσεις λειτουργούν απροστάτευτες — μη είστε μία από αυτές.">
   <meta name="keywords" content="εμπορικό σήμα Ελλάδα, trademark Greece, OBI, ΟΒΙ, κατοχύρωση σήματος, BrandGuard">
   <meta property="og:title" content="BrandGuard — Προστατέψτε το brand σας">
-  <meta property="og:description" content="Δωρεάν έλεγχος κατοχύρωσης εμπορικού σήματος για ελληνικές επιχειρήσεις.">
+  <meta property="og:description" content="Έλεγχος κατοχύρωσης εμπορικού σήματος για ελληνικές επιχειρήσεις — μόνο €9.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://brandguard.gr">
   <meta property="og:locale" content="el_GR">
@@ -151,7 +151,7 @@ function landingPageHTML() {
       <a href="/blog">Blog</a>
       <a href="#faq">FAQ</a>
     </div>
-    <a href="#check" class="nav-cta">Δωρεάν έλεγχος →</a>
+    <a href="#check" class="nav-cta">Έλεγχος €9 →</a>
   </div>
 </nav>
 
@@ -169,8 +169,8 @@ function landingPageHTML() {
   </div>
 
   <div class="form-card">
-    <h3>Δωρεάν έλεγχος κινδύνου</h3>
-    <p class="ptag">Ελέγχουμε OBI + EUIPO και σας στέλνουμε έκθεση εντός 48 ωρών. Χωρίς δέσμευση.</p>
+    <h3>Έλεγχος κινδύνου — €9</h3>
+    <p class="ptag">Ελέγχουμε OBI + EUIPO και σας στέλνουμε έκθεση εντός 48 ωρών. Μόνο €9.</p>
     <form method="POST" action="/submit-lead">
       <input type="hidden" name="utm_source" id="utm_source">
       <input type="hidden" name="utm_medium" id="utm_medium">
@@ -195,8 +195,8 @@ function landingPageHTML() {
       </select>
       <label>Πόλη</label>
       <input type="text" name="city" placeholder="π.χ. Αθήνα">
-      <button type="submit">Ζητήστε τον δωρεάν έλεγχο →</button>
-      <p class="form-note">🔒 Τα στοιχεία σας είναι ασφαλή. Δεν θα τα μοιραστούμε ποτέ.</p>
+      <button type="submit">Ξεκινήστε τον έλεγχο — €9 →</button>
+      <p class="form-note">🔒 Ασφαλής πληρωμή μέσω Stripe. Αποτέλεσμα εντός 48 ωρών.</p>
     </form>
   </div>
 </header>
@@ -236,7 +236,7 @@ function landingPageHTML() {
       <div class="step">
         <div class="step-num">1</div>
         <h4>Συμπληρώνετε τη φόρμα</h4>
-        <p>Όνομα επιχείρησης, κλάδος, πόλη. 30 δευτερόλεπτα. Χωρίς πιστωτική κάρτα, χωρίς newsletter.</p>
+        <p>Όνομα επιχείρησης, κλάδος, πόλη. 30 δευτερόλεπτα. Πληρωμή €9 μέσω Stripe.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>
@@ -265,11 +265,11 @@ function landingPageHTML() {
   <div class="container">
     <div class="section-label">Τιμοκατάλογος</div>
     <h2 class="section-title">Ξεκάθαρες τιμές. Χωρίς κρυφές χρεώσεις.</h2>
-    <p class="section-sub">Ο αρχικός έλεγχος είναι πάντα δωρεάν. Αν υπάρχει πρόβλημα ή θέλετε κατοχύρωση, επιλέγετε το πακέτο που σας ταιριάζει.</p>
+    <p class="section-sub">Ξεκινήστε με τον έλεγχο για μόνο €9. Αν θέλετε κατοχύρωση ή συνεχή παρακολούθηση, επιλέγετε το πακέτο που σας ταιριάζει.</p>
     <div class="pricing-grid">
       <div class="price-card">
-        <div class="price-name">Δωρεάν έλεγχος</div>
-        <div class="price-amt">€0</div>
+        <div class="price-name">Έλεγχος Σήματος</div>
+        <div class="price-amt">€9</div>
         <p class="price-desc">Βασική αναφορά κινδύνου για ένα brand σε έναν κλάδο.</p>
         <ul class="price-feats">
           <li>Έλεγχος OBI (Ελλάδα)</li>
@@ -277,16 +277,16 @@ function landingPageHTML() {
           <li>Αποτέλεσμα εντός 48 ωρών</li>
           <li>Γραπτή αναφορά σε PDF</li>
         </ul>
-        <a href="#check" class="price-cta">Ξεκινήστε δωρεάν →</a>
+        <a href="#check" class="price-cta">Ξεκινήστε τον έλεγχο →</a>
       </div>
 
       <div class="price-card featured">
         <div class="featured-badge">BEST VALUE</div>
         <div class="price-name">Filing Kit</div>
-        <div class="price-amt">€79<span class="per"> / one-time</span></div>
+        <div class="price-amt">€59<span class="per"> / one-time</span></div>
         <p class="price-desc">Πλήρες πακέτο κατοχύρωσης. Παραδοτέο έτοιμο για υποβολή στον ΟΒΙ.</p>
         <ul class="price-feats">
-          <li>Όλα του δωρεάν ελέγχου</li>
+          <li>Όλα του ελέγχου σήματος</li>
           <li>Προκαταρκτική έρευνα παρομοιότητας</li>
           <li>Συμπληρωμένο έντυπο ΟΒΙ</li>
           <li>Οδηγίες υποβολής step-by-step</li>
@@ -312,7 +312,7 @@ function landingPageHTML() {
     </div>
 
     <p style="text-align:center;margin-top:40px;font-size:14px;color:#64748b">
-      💡 Ο απλός έλεγχος <strong style="color:#0f172a">€29 (Risk Report)</strong> διατίθεται επίσης — <a href="/payment?product=report" style="color:#e11d48;font-weight:600">αγοράστε εδώ</a>.
+      💡 Ο αναλυτικός <strong style="color:#0f172a">€29 Risk Report</strong> διατίθεται επίσης — <a href="/payment?product=report" style="color:#e11d48;font-weight:600">αγοράστε εδώ</a>.
     </p>
   </div>
 </section>
@@ -337,7 +337,7 @@ function landingPageHTML() {
       </details>
       <details>
         <summary>Πόσο κοστίζει η επίσημη κατοχύρωση στον ΟΒΙ;</summary>
-        <p>Τα τέλη ΟΒΙ ξεκινούν από περίπου €110 για μία κλάση προϊόντων/υπηρεσιών. Το δικό μας Filing Kit (€79) σας προετοιμάζει τα πάντα για να κάνετε την υποβολή χωρίς να χρειαστεί δικηγόρος. Συνολικό κόστος: περίπου €189 για ένα πλήρως κατοχυρωμένο ελληνικό σήμα.</p>
+        <p>Τα τέλη ΟΒΙ ξεκινούν από περίπου €110 για μία κλάση προϊόντων/υπηρεσιών. Το δικό μας Filing Kit (€59) σας προετοιμάζει τα πάντα για να κάνετε την υποβολή χωρίς να χρειαστεί δικηγόρος. Συνολικό κόστος: περίπου €169 για ένα πλήρως κατοχυρωμένο ελληνικό σήμα.</p>
       </details>
       <details>
         <summary>Γιατί να μην πάω απευθείας σε δικηγόρο;</summary>
@@ -358,8 +358,8 @@ function landingPageHTML() {
 <!-- FINAL CTA -->
 <section class="final-cta">
   <h2>Μάθετε σε 48 ώρες αν το brand σας είναι ασφαλές</h2>
-  <p>Δωρεάν αναφορά για ελληνικές επιχειρήσεις — χωρίς δέσμευση, χωρίς χρεώσεις.</p>
-  <a href="#check" class="btn">Ξεκινήστε τον δωρεάν έλεγχο →</a>
+  <p>Πλήρης αναφορά κινδύνου για ελληνικές επιχειρήσεις — μόνο €9.</p>
+  <a href="#check" class="btn">Ξεκινήστε τον έλεγχο — €9 →</a>
 </section>
 
 <footer>
@@ -436,8 +436,9 @@ function thankYouHTML(businessName) {
 
 function paymentPageHTML(product, leadId) {
   const products = {
+    check: { name: 'BrandGuard Trademark Check', price: '€9', description: 'Έλεγχος OBI + EUIPO. Γραπτή αναφορά κινδύνου εντός 48 ωρών.' },
     report: { name: 'BrandGuard Risk Report', price: '€29', description: 'Λεπτομερής έκθεση κινδύνου με OBI + EUIPO + TMview cross-check.' },
-    kit: { name: 'BrandGuard Filing Kit', price: '€79', description: 'Πλήρες kit κατοχύρωσης — έτοιμο για υποβολή στον ΟΒΙ.' },
+    kit: { name: 'BrandGuard Filing Kit', price: '€59', description: 'Πλήρες kit κατοχύρωσης — έτοιμο για υποβολή στον ΟΒΙ.' },
     monitoring: { name: 'BrandGuard Monitoring', price: '€99/έτος', description: 'Εβδομαδιαία παρακολούθηση νέων καταχωρήσεων που απειλούν το brand σας.' },
   };
   const p = products[product] || products['report'];

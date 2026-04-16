@@ -6,6 +6,13 @@ const { sendPaymentConfirmation, sendPaymentAdminNotification } = require('../em
 
 // Stripe product config — prices created on first run or use existing price IDs
 const PRODUCTS = {
+  check: {
+    name: 'BrandGuard Trademark Check',
+    amount: 900, // cents
+    currency: 'eur',
+    display: '€9',
+    mode: 'payment', // one-time
+  },
   report: {
     name: 'BrandGuard Risk Report',
     amount: 2900, // cents
@@ -15,9 +22,9 @@ const PRODUCTS = {
   },
   kit: {
     name: 'BrandGuard Filing Kit',
-    amount: 7900,
+    amount: 5900,
     currency: 'eur',
-    display: '€79',
+    display: '€59',
     mode: 'payment', // one-time
   },
   monitoring: {
